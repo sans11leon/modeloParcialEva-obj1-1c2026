@@ -1,0 +1,69 @@
+import modos.*
+import cuartel.*
+import evas.*
+import pilotos.*
+
+
+describe "test minimos a realizar" {
+  test "El EVA-01 no puede usarse más de 3 veces seguidas sin recargarse." {
+    assert.equals(100, eva_01.energia())
+    nerv.intentarSincro(eva_01,azuka)
+    nerv.intentarSincro(eva_01,azuka)
+    nerv.intentarSincro(eva_01,azuka)
+    assert.that(!nerv.puedeSincronizar(eva_01,azuka))
+  }
+
+  test "En modo ataque, el EVA-02 otorga 3 de entrenamiento y consume 20 de energía." {
+    eva_02.cambiarModo(ataque)
+    assert.equals(3, eva_02.puntosQueOtorga())
+    assert.equals(20, eva_02.consumoDelModo())
+  }
+
+  test "Shinji puede al inicio sincronizar con el EVA-00." {
+    assert.that(nerv.puedeSincronizar(eva_00,shinji))
+  }
+  
+  test "Probar que Rei no puede realizar más de 5 sincronizaciones en total." {
+    eva_00.mejorarCampoAT(10)
+    nerv.intentarSincro(eva_00, rei)
+    nerv.intentarSincro(eva_00, rei)
+    nerv.intentarSincro(eva_00, rei)
+    nerv.intentarSincro(eva_00, rei)
+    nerv.intentarSincro(eva_00, rei)
+    assert.that(!nerv.puedeSincronizar(eva_00,rei)) 
+  }
+
+  test "El cálculo del promedio de puntos de entrenamiento de los pilotos es correcto." {
+    // se agrega todos los pilotos disponibles y los pilotos estan con su entrenamiento sin modificar
+    nerv.registrarPilotos([azuka,rei,shinji])
+    assert.equals(2, nerv.promedioDePuntosDePilotosEntrenados())
+  }
+
+  test "Verificar que cada EVA puede ser usado por al menos un piloto registrado en el cuartel." {
+    nerv.registrarPilotos([azuka,rei,shinji])
+    nerv.registrarEvas([eva_01,eva_02,eva_00])
+
+    nerv.ordenarAPilotoSincroConTodos(azuka)
+    nerv.ordenarAPilotoSincroConTodos(shinji)
+    nerv.ordenarAPilotoSincroConTodos(rei)
+    
+    assert.that(nerv.algunEvaPuedeSincroCon(azuka))
+    assert.that(nerv.algunEvaPuedeSincroCon(shinji))
+
+    assert.that(nerv.algunEvaPuedeSincroCon(rei)) //no puede sincro por campoAT de eva00/para eva01 y 02 falta entrenamiento
+    //si se aumenta el campoAT, en ese caso si puede sincronizar con al menos 1 "eva_00" sin requerir entrenamiento
+    //eva_00.mejorarCampoAT(10) 
+    //assert.that(nerv.algunEvaPuedeSincroCon(rei))
+  }
+
+  test "Que un piloto se considera satisfecho según su definición personal." {
+    nerv.registrarEvas([eva_01,eva_02,eva_00])
+    nerv.registrarPilotos([shinji])
+
+    nerv.intentarSincro(eva_02,shinji)
+    nerv.intentarSincro(eva_00,shinji)
+    nerv.intentarSincro(eva_01,shinji)
+    assert.that(nerv.estaSatisfecho_(shinji))
+    //elegi a shinji para verificar si esta satisfecho por el de sincro dado para que aumente el entrenamiento de el y poder usar a los 3 evas
+  }
+}
